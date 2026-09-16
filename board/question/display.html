@@ -1,120 +1,176 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방송 질문 화면</title>
 
-<meta charset="UTF-8">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+    }
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
+    #questionBox {
+      display: none;
+      position: absolute;
+      left: 50%;
+      bottom: 60px;
+      transform: translateX(-50%);
 
-<title>방송 질문 화면</title>
+      width: 80%;
+      max-width: 1000px;
+      box-sizing: border-box;
 
+      padding: 28px 36px;
 
-<style>
+      background: rgba(0, 0, 0, 0.82);
+      color: white;
 
-html,
-body {
+      border-radius: 22px;
 
-  margin: 0;
-  padding: 0;
+      text-align: center;
 
-  width: 100%;
-  height: 100%;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
 
-  background: transparent;
+    #label {
+      display: block;
+      margin-bottom: 10px;
 
-  overflow: hidden;
+      font-size: 20px;
+      font-weight: 600;
 
-  font-family:
-    Arial,
-    "Noto Sans KR",
-    sans-serif;
+      opacity: 0.7;
+    }
 
-}
+    #counter {
+      display: block;
+      margin-bottom: 12px;
 
+      font-size: 16px;
+      font-weight: 500;
 
-#questionBox {
+      opacity: 0.55;
+    }
 
-  display: none;
+    #questionText {
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.45;
 
-  position: absolute;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
 
-  left: 50%;
-  bottom: 60px;
+    /*
+      마우스를 화면 위쪽으로 가져가면
+      조작 버튼 표시
+    */
 
-  transform:
-    translateX(-50%);
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
 
-  width: 80%;
-  max-width: 1000px;
+      display: flex;
+      gap: 8px;
 
-  box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.2s;
 
-  padding: 28px 36px;
+      background: rgba(0,0,0,0.65);
+      padding: 10px;
+      border-radius: 12px;
+    }
 
-  background:
-    rgba(0,0,0,0.82);
+    body:hover #controls {
+      opacity: 1;
+    }
 
-  color: white;
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 16px;
 
-  border-radius: 22px;
+      cursor: pointer;
 
-  text-align: center;
+      background: #222;
+      color: white;
 
-  font-size: 38px;
+      font-size: 14px;
+      font-weight: bold;
+    }
 
-  font-weight: 700;
+    button:hover {
+      background: #444;
+    }
 
-  line-height: 1.45;
+    #hideBtn {
+      background: #777;
+    }
 
-  word-break: keep-all;
+    #controlCounter {
+      color: white;
+      display: flex;
+      align-items: center;
 
-  overflow-wrap: break-word;
+      padding: 0 10px;
 
-  box-shadow:
-    0 8px 30px
-    rgba(0,0,0,0.35);
+      font-weight: bold;
+      min-width: 70px;
+      justify-content: center;
+    }
 
-}
-
-
-#label {
-
-  display: block;
-
-  margin-bottom: 12px;
-
-  font-size: 20px;
-
-  font-weight: 600;
-
-  opacity: 0.7;
-
-}
-
-
-#questionText {
-
-  white-space: pre-wrap;
-
-}
-
-</style>
-
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
-
 
 <body>
 
+
+<!-- 조작 버튼 -->
+
+<div id="controls">
+
+  <button id="prevBtn">
+    ◀ 이전
+  </button>
+
+  <div id="controlCounter">
+    0 / 0
+  </div>
+
+  <button id="nextBtn">
+    다음 ▶
+  </button>
+
+  <button id="hideBtn">
+    숨기기
+  </button>
+
+</div>
+
+
+<!-- 실제 방송 질문 -->
 
 <div id="questionBox">
 
   <span id="label">
     익명 질문
   </span>
+
+  <span id="counter"></span>
 
   <div id="questionText"></div>
 
@@ -123,29 +179,29 @@ body {
 
 <script type="module">
 
-
 import {
   initializeApp
 }
-from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 
 import {
-
   getFirestore,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
   doc,
-  onSnapshot
-
+  setDoc,
+  serverTimestamp
 }
-from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
 const firebaseConfig = {
 
   apiKey:
-    "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
+    "AIzaSyDq1lPYv5OWP0rdsJCbMh3Xt_laZKEptVQ",
 
   authDomain:
     "anonymous-question-47aaf.firebaseapp.com",
@@ -166,31 +222,154 @@ const firebaseConfig = {
 
 
 const app =
-  initializeApp(
-    firebaseConfig
-  );
-
+  initializeApp(firebaseConfig);
 
 const db =
   getFirestore(app);
 
 
-const questionBox =
-  document.getElementById(
-    "questionBox"
-  );
+/* ==============================
+   HTML 요소
+============================== */
 
+const questionBox =
+  document.getElementById("questionBox");
 
 const questionText =
-  document.getElementById(
-    "questionText"
-  );
+  document.getElementById("questionText");
+
+const counter =
+  document.getElementById("counter");
+
+const controlCounter =
+  document.getElementById("controlCounter");
+
+const prevBtn =
+  document.getElementById("prevBtn");
+
+const nextBtn =
+  document.getElementById("nextBtn");
+
+const hideBtn =
+  document.getElementById("hideBtn");
 
 
-/*
-  관리자 페이지와 동일하게
-  display/current 감시
-*/
+/* ==============================
+   상태
+============================== */
+
+let questions = [];
+
+let currentIndex = 0;
+
+let currentQuestionId = null;
+
+let visible = true;
+
+
+/* ==============================
+   질문 목록 실시간 불러오기
+============================== */
+
+const questionsQuery = query(
+
+  collection(
+    db,
+    "questions"
+  ),
+
+  orderBy(
+    "createdAt",
+    "asc"
+  )
+
+);
+
+
+onSnapshot(
+
+  questionsQuery,
+
+  (snapshot) => {
+
+    const previousId =
+      currentQuestionId;
+
+
+    questions =
+      snapshot.docs.map(
+
+        (document) => ({
+
+          id: document.id,
+
+          ...document.data()
+
+        })
+
+      );
+
+
+    /*
+      새 질문이 들어와도
+      현재 보고 있던 질문 유지
+    */
+
+    if (previousId) {
+
+      const foundIndex =
+        questions.findIndex(
+
+          q =>
+            q.id ===
+            previousId
+
+        );
+
+
+      if (foundIndex !== -1) {
+
+        currentIndex =
+          foundIndex;
+
+      }
+
+    }
+
+
+    if (
+      currentIndex >=
+      questions.length
+    ) {
+
+      currentIndex =
+        Math.max(
+          0,
+          questions.length - 1
+        );
+
+    }
+
+
+    render();
+
+  },
+
+  (error) => {
+
+    console.error(
+      "질문 불러오기 오류:",
+      error
+    );
+
+  }
+
+);
+
+
+/* ==============================
+   관리자에서 변경한 질문 감지
+============================== */
 
 const displayRef =
   doc(
@@ -206,19 +385,8 @@ onSnapshot(
 
   (snapshot) => {
 
-
-    /*
-      문서 자체가 없으면
-      화면 숨김
-    */
-
     if (!snapshot.exists()) {
-
-      questionBox.style.display =
-        "none";
-
       return;
-
     }
 
 
@@ -226,86 +394,361 @@ onSnapshot(
       snapshot.data();
 
 
-    /*
-      방송에서 내리기를 누르면
-      visible = false
-    */
-
     if (
       data.visible === false
     ) {
 
+      visible = false;
+
       questionBox.style.display =
         "none";
-
-      questionText.textContent =
-        "";
 
       return;
 
     }
 
 
-    const text =
+    if (data.questionId) {
 
-      data.text ||
+      const foundIndex =
+        questions.findIndex(
 
-      data.question ||
+          q =>
+            q.id ===
+            data.questionId
 
-      data.content ||
-
-      "";
+        );
 
 
-    /*
-      내용이 없으면 숨김
-    */
+      if (foundIndex !== -1) {
 
-    if (!text) {
+        currentIndex =
+          foundIndex;
 
-      questionBox.style.display =
-        "none";
+        currentQuestionId =
+          data.questionId;
 
-      questionText.textContent =
-        "";
-
-      return;
+      }
 
     }
 
 
-    /*
-      질문 표시
-    */
+    visible = true;
 
-    questionText.textContent =
-      text;
-
-
-    questionBox.style.display =
-      "block";
-
-  },
-
-
-  (error) => {
-
-    console.error(
-      "질문 불러오기 오류:",
-      error
-    );
-
-    questionBox.style.display =
-      "none";
+    render();
 
   }
 
 );
 
 
+/* ==============================
+   화면 그리기
+============================== */
+
+function render() {
+
+  if (
+    questions.length === 0
+  ) {
+
+    questionBox.style.display =
+      "none";
+
+    controlCounter.textContent =
+      "0 / 0";
+
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+
+    return;
+
+  }
+
+
+  const question =
+    questions[currentIndex];
+
+
+  currentQuestionId =
+    question.id;
+
+
+  questionText.textContent =
+    question.text || "";
+
+
+  counter.textContent =
+    (currentIndex + 1) +
+    " / " +
+    questions.length;
+
+
+  controlCounter.textContent =
+    (currentIndex + 1) +
+    " / " +
+    questions.length;
+
+
+  prevBtn.disabled =
+    currentIndex === 0;
+
+
+  nextBtn.disabled =
+    currentIndex ===
+    questions.length - 1;
+
+
+  if (visible) {
+
+    questionBox.style.display =
+      "block";
+
+  }
+
+}
+
+
+/* ==============================
+   Firebase에 현재 질문 저장
+============================== */
+
+async function saveCurrentQuestion() {
+
+  if (
+    questions.length === 0
+  ) {
+    return;
+  }
+
+
+  const question =
+    questions[currentIndex];
+
+
+  currentQuestionId =
+    question.id;
+
+  visible = true;
+
+
+  await setDoc(
+
+    displayRef,
+
+    {
+
+      text:
+        question.text || "",
+
+      questionId:
+        question.id,
+
+      visible:
+        true,
+
+      updatedAt:
+        serverTimestamp()
+
+    }
+
+  );
+
+
+  render();
+
+}
+
+
+/* ==============================
+   다음 질문
+============================== */
+
+async function nextQuestion() {
+
+  if (
+    currentIndex >=
+    questions.length - 1
+  ) {
+    return;
+  }
+
+
+  currentIndex++;
+
+  await saveCurrentQuestion();
+
+}
+
+
+/* ==============================
+   이전 질문
+============================== */
+
+async function prevQuestion() {
+
+  if (
+    currentIndex <= 0
+  ) {
+    return;
+  }
+
+
+  currentIndex--;
+
+  await saveCurrentQuestion();
+
+}
+
+
+/* ==============================
+   질문 숨기기
+============================== */
+
+async function hideQuestion() {
+
+  visible = false;
+
+  questionBox.style.display =
+    "none";
+
+
+  await setDoc(
+
+    displayRef,
+
+    {
+
+      text: "",
+
+      questionId:
+        currentQuestionId,
+
+      visible:
+        false,
+
+      updatedAt:
+        serverTimestamp()
+
+    }
+
+  );
+
+}
+
+
+/* ==============================
+   다시 표시
+============================== */
+
+async function showQuestion() {
+
+  if (
+    questions.length === 0
+  ) {
+    return;
+  }
+
+  visible = true;
+
+  await saveCurrentQuestion();
+
+}
+
+
+/* ==============================
+   버튼
+============================== */
+
+prevBtn.onclick =
+  prevQuestion;
+
+nextBtn.onclick =
+  nextQuestion;
+
+hideBtn.onclick =
+  hideQuestion;
+
+
+/* ==============================
+   키보드
+============================== */
+
+document.addEventListener(
+
+  "keydown",
+
+  async (event) => {
+
+
+    /*
+      → 다음 질문
+    */
+
+    if (
+      event.key ===
+      "ArrowRight"
+    ) {
+
+      event.preventDefault();
+
+      await nextQuestion();
+
+    }
+
+
+    /*
+      ← 이전 질문
+    */
+
+    if (
+      event.key ===
+      "ArrowLeft"
+    ) {
+
+      event.preventDefault();
+
+      await prevQuestion();
+
+    }
+
+
+    /*
+      ESC 숨기기
+    */
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+
+      event.preventDefault();
+
+      await hideQuestion();
+
+    }
+
+
+    /*
+      SPACE 다시 표시
+    */
+
+    if (
+      event.code ===
+      "Space"
+    ) {
+
+      event.preventDefault();
+
+      await showQuestion();
+
+    }
+
+  }
+
+);
+
 </script>
 
-
 </body>
-
 </html>
