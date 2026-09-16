@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>익명 질문함</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 600px;
+      margin: 80px auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 35px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .description {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      resize: none;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #555;
+    }
+
+    .counter {
+      text-align: right;
+      color: #888;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #222;
+      color: white;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      min-height: 24px;
+      font-weight: bold;
+    }
+
+    .notice {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <h1>💬 익명 질문함</h1>
+
+    <div class="description">
+      궁금한 내용을 자유롭게 남겨주세요.<br>
+      질문은 익명으로 전달됩니다.
+    </div>
+
+    <textarea
+      id="question"
+      maxlength="1000"
+      placeholder="질문을 입력해주세요."
+    ></textarea>
+
+    <div class="counter">
+      <span id="count">0</span> / 1000
+    </div>
+
+    <button id="sendButton">
+      익명으로 질문 보내기
+    </button>
+
+    <div id="message"></div>
+
+    <div class="notice">
+      작성자의 이름이나 닉네임을 입력하지 않습니다.
+    </div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+  import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp
+  }
+  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+  const firebaseConfig = {
+
+    apiKey: "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
+
+    authDomain:
+    "anonymous-question-47aaf.firebaseapp.com",
+
+    projectId:
+    "anonymous-question-47aaf",
+
+    storageBucket:
+    "anonymous-question-47aaf.firebasestorage.app",
+
+    messagingSenderId:
+    "156669665259",
+
+    appId:
+    "1:156669665259:web:188f4f90005abacb22c3ae"
+
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+
+  const db = getFirestore(app);
+
+
+  const question =
+    document.getElementById("question");
+
+  const sendButton =
+    document.getElementById("sendButton");
+
+  const message =
+    document.getElementById("message");
+
+  const count =
+    document.getElementById("count");
+
+
+  question.addEventListener("input", () => {
+
+    count.textContent =
+      question.value.length;
+
+  });
+
+
+  sendButton.addEventListener("click", async () => {
+
+    const text =
+      question.value.trim();
+
+
+    if (!text) {
+
+      message.style.color = "#d32f2f";
+
+      message.textContent =
+        "질문을 입력해주세요.";
+
+      return;
+
+    }
+
+
+    sendButton.disabled = true;
+
+    sendButton.textContent =
+      "전송 중...";
+
+    message.textContent = "";
+
+
+    try {
+
+      await addDoc(
+        collection(db, "questions"),
+        {
+
+          text: text,
+
+          createdAt:
+          serverTimestamp()
+
+        }
+      );
+
+
+      question.value = "";
+
+      count.textContent = "0";
+
+      message.style.color = "#2e7d32";
+
+      message.textContent =
+        "질문이 익명으로 전달되었습니다. ✓";
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      message.style.color = "#d32f2f";
+
+      message.textContent =
+        "전송에 실패했습니다. 잠시 후 다시 시도해주세요.";
+
+    }
+
+
+    sendButton.disabled = false;
+
+    sendButton.textContent =
+      "익명으로 질문 보내기";
+
+  });
+
+</script>
+
+</body>
+</html>
