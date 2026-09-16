@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방송 질문 화면</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+    }
+
+    #questionBox {
+      display: none;
+      position: absolute;
+      left: 50%;
+      bottom: 60px;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 1000px;
+
+      box-sizing: border-box;
+      padding: 28px 36px;
+
+      background: rgba(0, 0, 0, 0.82);
+      color: white;
+
+      border-radius: 22px;
+
+      text-align: center;
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.45;
+
+      word-break: keep-all;
+      overflow-wrap: break-word;
+
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
+
+    #label {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="questionBox">
+    <span id="label">익명 질문</span>
+    <div id="questionText"></div>
+  </div>
+
+  <script type="module">
+
+    import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+    import {
+      getFirestore,
+      doc,
+      onSnapshot
+    }
+    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlzaSyDq1IPYv5OWP0rdsJCbMh3Xt_laZKEptVQ",
+      authDomain: "anonymous-question-47aaf.firebaseapp.com",
+      projectId: "anonymous-question-47aaf",
+      storageBucket: "anonymous-question-47aaf.firebasestorage.app",
+      messagingSenderId: "156669665259",
+      appId: "1:156669665259:web:188f4f90005abacb22c3ae"
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const questionBox = document.getElementById("questionBox");
+    const questionText = document.getElementById("questionText");
+
+
+    /*
+      admin.html에서 "방송에 띄우기"를 누르면
+      broadcast/current 문서가 변경됩니다.
+    */
+
+    const broadcastRef = doc(db, "broadcast", "current");
+
+    onSnapshot(broadcastRef, (snapshot) => {
+
+      if (!snapshot.exists()) {
+        questionBox.style.display = "none";
+        return;
+      }
+
+      const data = snapshot.data();
+
+      const text =
+        data.text ||
+        data.question ||
+        data.content ||
+        "";
+
+      if (!text) {
+        questionBox.style.display = "none";
+        return;
+      }
+
+      questionText.textContent = text;
+      questionBox.style.display = "block";
+
+    }, (error) => {
+
+      console.error("질문 불러오기 오류:", error);
+
+    });
+
+  </script>
+
+</body>
+</html>
