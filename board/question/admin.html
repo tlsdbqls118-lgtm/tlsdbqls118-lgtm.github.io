@@ -6,8 +6,12 @@
   <title>질문 관리자</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial, "Noto Sans KR", sans-serif;
       background: #f5f5f5;
       margin: 0;
       padding: 30px;
@@ -27,56 +31,140 @@
 
     button {
       border: 0;
-      border-radius: 8px;
-      padding: 10px 15px;
+      border-radius: 10px;
+      padding: 12px 20px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.85;
     }
 
     #loginBtn {
       background: #4285f4;
       color: white;
-      font-size: 16px;
     }
 
     #logoutBtn {
       background: #555;
       color: white;
-      margin-left: 8px;
-    }
-
-    .question {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
-
-    .questionText {
-      font-size: 18px;
-      margin-bottom: 15px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .showBtn {
-      background: #222;
-      color: white;
-      margin-right: 6px;
-    }
-
-    .deleteBtn {
-      background: #e74c3c;
-      color: white;
+      margin-left: 10px;
     }
 
     #adminArea {
       display: none;
     }
 
+    #counter {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      margin: 25px 0 15px;
+    }
+
+    #questionCard {
+      background: white;
+      min-height: 250px;
+      border-radius: 18px;
+      padding: 40px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      text-align: center;
+      font-size: 32px;
+      font-weight: bold;
+      line-height: 1.5;
+
+      white-space: pre-wrap;
+      word-break: break-word;
+
+      margin-bottom: 20px;
+
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+
+    #broadcastStatus {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    #prevBtn,
+    #nextBtn {
+      background: #222;
+      color: white;
+      min-width: 180px;
+      font-size: 18px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #showBtn {
+      background: #4285f4;
+      color: white;
+    }
+
+    #hideBtn {
+      background: #f39c12;
+      color: white;
+    }
+
+    #deleteBtn {
+      background: #e74c3c;
+      color: white;
+    }
+
     #status {
       margin-top: 15px;
       font-weight: bold;
+    }
+
+    .shortcut {
+      margin-top: 25px;
+      padding: 18px;
+      background: #e9e9e9;
+      border-radius: 12px;
+      line-height: 1.8;
+      text-align: center;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      #questionCard {
+        min-height: 200px;
+        padding: 25px;
+        font-size: 24px;
+      }
+
+      .nav {
+        flex-direction: column;
+      }
+
+      #prevBtn,
+      #nextBtn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -92,6 +180,7 @@
     <div id="status">관리자 로그인이 필요합니다.</div>
   </div>
 
+
   <div id="adminArea">
 
     <div class="box">
@@ -99,20 +188,63 @@
       <button id="logoutBtn">로그아웃</button>
     </div>
 
-    <h2>받은 질문</h2>
+    <div id="counter">0 / 0</div>
 
-    <div id="questionList">
-      질문을 불러오는 중...
+    <div id="broadcastStatus">
+      방송 화면 대기 중
+    </div>
+
+    <div id="questionCard">
+      질문이 없습니다.
+    </div>
+
+
+    <div class="nav">
+
+      <button id="prevBtn">
+        ◀ 이전 질문
+      </button>
+
+      <button id="nextBtn">
+        다음 질문 ▶
+      </button>
+
+    </div>
+
+
+    <div class="controls">
+
+      <button id="showBtn">
+        방송에 띄우기
+      </button>
+
+      <button id="hideBtn">
+        방송에서 내리기
+      </button>
+
+      <button id="deleteBtn">
+        현재 질문 삭제
+      </button>
+
+    </div>
+
+
+    <div class="shortcut">
+      ← 이전 질문 &nbsp;&nbsp; | &nbsp;&nbsp;
+      → 다음 질문 &nbsp;&nbsp; | &nbsp;&nbsp;
+      Enter 방송에 띄우기 &nbsp;&nbsp; | &nbsp;&nbsp;
+      ESC 방송에서 내리기
     </div>
 
   </div>
 
 </div>
 
+
 <script type="module">
 
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 import {
   getAuth,
@@ -120,8 +252,8 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
   getFirestore,
@@ -133,12 +265,12 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDq1lPYv5OWP0rdsJCbMh3Xt_laZKEptVQ",
+  apiKey: "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
   authDomain: "anonymous-question-47aaf.firebaseapp.com",
   projectId: "anonymous-question-47aaf",
   storageBucket: "anonymous-question-47aaf.firebasestorage.app",
@@ -149,32 +281,84 @@ const firebaseConfig = {
 
 const ADMIN_EMAIL = "ragoondog@gmail.com";
 
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const loginArea = document.getElementById("loginArea");
-const adminArea = document.getElementById("adminArea");
-const status = document.getElementById("status");
-const userInfo = document.getElementById("userInfo");
-const questionList = document.getElementById("questionList");
 
+const loginBtn =
+  document.getElementById("loginBtn");
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+const loginArea =
+  document.getElementById("loginArea");
+
+const adminArea =
+  document.getElementById("adminArea");
+
+const status =
+  document.getElementById("status");
+
+const userInfo =
+  document.getElementById("userInfo");
+
+const counter =
+  document.getElementById("counter");
+
+const questionCard =
+  document.getElementById("questionCard");
+
+const broadcastStatus =
+  document.getElementById("broadcastStatus");
+
+const prevBtn =
+  document.getElementById("prevBtn");
+
+const nextBtn =
+  document.getElementById("nextBtn");
+
+const showBtn =
+  document.getElementById("showBtn");
+
+const hideBtn =
+  document.getElementById("hideBtn");
+
+const deleteBtn =
+  document.getElementById("deleteBtn");
+
+
+let questions = [];
+let currentIndex = 0;
+let unsubscribeQuestions = null;
+
+
+/* =========================
+   로그인
+========================= */
 
 loginBtn.onclick = async () => {
 
   try {
 
-    const provider = new GoogleAuthProvider();
+    const provider =
+      new GoogleAuthProvider();
 
-    await signInWithPopup(auth, provider);
+    await signInWithPopup(
+      auth,
+      provider
+    );
 
   } catch (error) {
 
     console.error(error);
 
-    alert("로그인 오류: " + error.message);
+    alert(
+      "로그인 오류: " +
+      error.message
+    );
 
   }
 
@@ -188,164 +372,505 @@ logoutBtn.onclick = async () => {
 };
 
 
-onAuthStateChanged(auth, (user) => {
+/* =========================
+   로그인 상태 확인
+========================= */
 
-  if (!user) {
+onAuthStateChanged(
+  auth,
+  (user) => {
 
-    loginArea.style.display = "block";
-    adminArea.style.display = "none";
+    if (!user) {
 
-    status.textContent = "관리자 로그인이 필요합니다.";
+      loginArea.style.display =
+        "block";
 
-    return;
+      adminArea.style.display =
+        "none";
+
+      status.textContent =
+        "관리자 로그인이 필요합니다.";
+
+      return;
+    }
+
+
+    if (user.email !== ADMIN_EMAIL) {
+
+      alert(
+        "관리자 계정이 아닙니다."
+      );
+
+      signOut(auth);
+
+      return;
+    }
+
+
+    loginArea.style.display =
+      "none";
+
+    adminArea.style.display =
+      "block";
+
+    userInfo.textContent =
+      "관리자 로그인: " +
+      user.email;
+
+    loadQuestions();
 
   }
+);
 
 
-  if (user.email !== ADMIN_EMAIL) {
-
-    alert("관리자 계정이 아닙니다.");
-
-    signOut(auth);
-
-    return;
-
-  }
-
-
-  loginArea.style.display = "none";
-  adminArea.style.display = "block";
-
-  userInfo.textContent =
-    "관리자 로그인: " + user.email;
-
-  loadQuestions();
-
-});
-
+/* =========================
+   질문 실시간 불러오기
+========================= */
 
 function loadQuestions() {
 
+  if (unsubscribeQuestions) {
+    unsubscribeQuestions();
+  }
+
+
   const q = query(
     collection(db, "questions"),
-    orderBy("createdAt", "desc")
+    orderBy("createdAt", "asc")
   );
 
 
-  onSnapshot(q, (snapshot) => {
+  unsubscribeQuestions =
+    onSnapshot(
 
-    questionList.innerHTML = "";
+      q,
+
+      (snapshot) => {
+
+        const currentId =
+          questions[currentIndex]?.id;
 
 
-    if (snapshot.empty) {
+        questions = [];
 
-      questionList.innerHTML =
-        "<div class='box'>아직 질문이 없습니다.</div>";
 
-      return;
+        snapshot.forEach(
+          (questionDoc) => {
+
+            questions.push({
+
+              id: questionDoc.id,
+
+              ...questionDoc.data()
+
+            });
+
+          }
+        );
+
+
+        /*
+          새 질문이 들어와도
+          현재 보고 있던 질문 유지
+        */
+
+        if (currentId) {
+
+          const found =
+            questions.findIndex(
+              item =>
+                item.id === currentId
+            );
+
+
+          if (found !== -1) {
+
+            currentIndex = found;
+
+          }
+
+        }
+
+
+        if (
+          currentIndex >=
+          questions.length
+        ) {
+
+          currentIndex =
+            Math.max(
+              0,
+              questions.length - 1
+            );
+
+        }
+
+
+        renderQuestion();
+
+      },
+
+      (error) => {
+
+        console.error(error);
+
+        questionCard.textContent =
+          "질문 불러오기 오류: " +
+          error.message;
+
+      }
+
+    );
+
+}
+
+
+/* =========================
+   관리자 화면에 한 질문 표시
+========================= */
+
+function renderQuestion() {
+
+  if (questions.length === 0) {
+
+    counter.textContent =
+      "0 / 0";
+
+    questionCard.textContent =
+      "아직 질문이 없습니다.";
+
+    return;
+
+  }
+
+
+  const current =
+    questions[currentIndex];
+
+
+  counter.textContent =
+    `${currentIndex + 1} / ${questions.length}`;
+
+
+  questionCard.textContent =
+    current.text ||
+    "(내용 없는 질문)";
+
+}
+
+
+/* =========================
+   현재 질문 방송에 표시
+========================= */
+
+async function showCurrentQuestion() {
+
+  if (questions.length === 0) {
+    return;
+  }
+
+
+  const current =
+    questions[currentIndex];
+
+
+  try {
+
+    await setDoc(
+
+      doc(
+        db,
+        "display",
+        "current"
+      ),
+
+      {
+
+        text:
+          current.text || "",
+
+        questionId:
+          current.id,
+
+        visible:
+          true,
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+
+    );
+
+
+    broadcastStatus.textContent =
+      `🔴 방송 표시 중 : ${currentIndex + 1} / ${questions.length}`;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "방송 표시 오류: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   다음 질문
+========================= */
+
+async function nextQuestion() {
+
+  if (questions.length === 0) {
+    return;
+  }
+
+
+  if (
+    currentIndex <
+    questions.length - 1
+  ) {
+
+    currentIndex++;
+
+  } else {
+
+    currentIndex = 0;
+
+  }
+
+
+  renderQuestion();
+
+  /*
+    다음 버튼을 누르면
+    방송 화면도 바로 변경
+  */
+
+  await showCurrentQuestion();
+
+}
+
+
+/* =========================
+   이전 질문
+========================= */
+
+async function prevQuestion() {
+
+  if (questions.length === 0) {
+    return;
+  }
+
+
+  if (currentIndex > 0) {
+
+    currentIndex--;
+
+  } else {
+
+    currentIndex =
+      questions.length - 1;
+
+  }
+
+
+  renderQuestion();
+
+  /*
+    이전 버튼을 누르면
+    방송 화면도 바로 변경
+  */
+
+  await showCurrentQuestion();
+
+}
+
+
+/* =========================
+   방송에서 질문 내리기
+========================= */
+
+async function hideBroadcast() {
+
+  try {
+
+    await setDoc(
+
+      doc(
+        db,
+        "display",
+        "current"
+      ),
+
+      {
+
+        text: "",
+
+        questionId: "",
+
+        visible: false,
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+
+    );
+
+
+    broadcastStatus.textContent =
+      "⚪ 방송 화면에서 질문을 내렸습니다.";
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "방송 내리기 오류: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   현재 질문 삭제
+========================= */
+
+async function deleteCurrentQuestion() {
+
+  if (questions.length === 0) {
+    return;
+  }
+
+
+  const current =
+    questions[currentIndex];
+
+
+  const ok =
+    confirm(
+      "현재 질문을 완전히 삭제할까요?"
+    );
+
+
+  if (!ok) {
+    return;
+  }
+
+
+  try {
+
+    await deleteDoc(
+
+      doc(
+        db,
+        "questions",
+        current.id
+      )
+
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "삭제 오류: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   버튼 연결
+========================= */
+
+prevBtn.onclick =
+  prevQuestion;
+
+nextBtn.onclick =
+  nextQuestion;
+
+showBtn.onclick =
+  showCurrentQuestion;
+
+hideBtn.onclick =
+  hideBroadcast;
+
+deleteBtn.onclick =
+  deleteCurrentQuestion;
+
+
+/* =========================
+   키보드 조작
+========================= */
+
+document.addEventListener(
+  "keydown",
+  async (event) => {
+
+
+    if (
+      event.key ===
+      "ArrowRight"
+    ) {
+
+      event.preventDefault();
+
+      await nextQuestion();
 
     }
 
 
-    snapshot.forEach((questionDoc) => {
+    else if (
+      event.key ===
+      "ArrowLeft"
+    ) {
 
-      const data = questionDoc.data();
+      event.preventDefault();
 
-      const div = document.createElement("div");
+      await prevQuestion();
 
-      div.className = "question";
-
-
-      const text = document.createElement("div");
-
-      text.className = "questionText";
-
-      text.textContent = data.text || "";
+    }
 
 
-      const showBtn = document.createElement("button");
+    else if (
+      event.key ===
+      "Enter"
+    ) {
 
-      showBtn.className = "showBtn";
+      event.preventDefault();
 
-      showBtn.textContent = "방송에 띄우기";
+      await showCurrentQuestion();
 
-
-      showBtn.onclick = async () => {
-
-        try {
-
-          await setDoc(
-            doc(db, "display", "current"),
-            {
-              text: data.text,
-              questionId: questionDoc.id,
-              updatedAt: serverTimestamp()
-            }
-          );
-
-          alert("방송 화면에 질문을 띄웠습니다.");
-
-        } catch (error) {
-
-          console.error(error);
-
-          alert("방송 표시 오류: " + error.message);
-
-        }
-
-      };
+    }
 
 
-      const deleteBtn = document.createElement("button");
+    else if (
+      event.key ===
+      "Escape"
+    ) {
 
-      deleteBtn.className = "deleteBtn";
+      event.preventDefault();
 
-      deleteBtn.textContent = "삭제";
+      await hideBroadcast();
 
+    }
 
-      deleteBtn.onclick = async () => {
-
-        if (!confirm("이 질문을 삭제할까요?")) {
-          return;
-        }
-
-        try {
-
-          await deleteDoc(
-            doc(db, "questions", questionDoc.id)
-          );
-
-        } catch (error) {
-
-          console.error(error);
-
-          alert("삭제 오류: " + error.message);
-
-        }
-
-      };
-
-
-      div.appendChild(text);
-      div.appendChild(showBtn);
-      div.appendChild(deleteBtn);
-
-      questionList.appendChild(div);
-
-    });
-
-  }, (error) => {
-
-    console.error(error);
-
-    questionList.innerHTML =
-      "<div class='box'>질문 불러오기 오류: " +
-      error.message +
-      "</div>";
-
-  });
-
-}
+  }
+);
 
 </script>
 
