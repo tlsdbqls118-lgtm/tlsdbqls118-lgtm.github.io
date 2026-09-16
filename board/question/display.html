@@ -12,133 +12,40 @@ content="width=device-width, initial-scale=1.0">
 
 <style>
 
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
-
   margin: 0;
   padding: 0;
 
   width: 100%;
   height: 100%;
 
-  overflow: hidden;
-
   font-family:
-  Arial,
-  "Noto Sans KR",
-  sans-serif;
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
 
-  background: transparent;
-
+  background: #f5f5f5;
 }
 
 
-/* 로그인 화면 */
+/* 전체 */
 
-#loginScreen {
+.container {
+  width: 100%;
+  min-height: 100vh;
 
-  position: absolute;
+  display: flex;
+  flex-direction: column;
 
-  top: 30px;
-  left: 50%;
+  align-items: center;
+  justify-content: center;
 
-  transform: translateX(-50%);
-
-  background: rgba(30,30,30,0.9);
-
-  padding: 15px 20px;
-
-  border-radius: 12px;
-
-  color: white;
-
-  z-index: 100;
-
-}
-
-
-#loginBtn {
-
-  border: 0;
-
-  background: #4285f4;
-
-  color: white;
-
-  padding: 10px 18px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-weight: bold;
-
-}
-
-
-/* 컨트롤 */
-
-#controls {
-
-  display: none;
-
-  position: absolute;
-
-  top: 20px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  background: rgba(35,35,35,0.85);
-
-  padding: 10px;
-
-  border-radius: 14px;
-
-  z-index: 50;
-
-  white-space: nowrap;
-
-}
-
-
-#controls button {
-
-  border: 0;
-
-  background: #555;
-
-  color: white;
-
-  padding: 10px 16px;
-
-  border-radius: 7px;
-
-  cursor: pointer;
-
-  font-size: 15px;
-
-  font-weight: bold;
-
-  margin: 0 3px;
-
-}
-
-
-#counter {
-
-  display: inline-block;
-
-  color: white;
-
-  min-width: 80px;
-
-  text-align: center;
-
-  font-size: 16px;
-
-  font-weight: bold;
-
+  padding: 30px;
 }
 
 
@@ -146,50 +53,45 @@ body {
 
 #questionBox {
 
-  display: none;
+  width: 85%;
+  max-width: 1100px;
 
-  position: absolute;
+  min-height: 260px;
 
-  left: 50%;
-
-  bottom: 60px;
-
-  transform: translateX(-50%);
-
-  width: 80%;
-
-  max-width: 1000px;
-
-  box-sizing: border-box;
-
-  padding: 28px 36px;
-
-  background: rgba(0,0,0,0.82);
+  background:
+    rgba(0, 0, 0, 0.88);
 
   color: white;
 
-  border-radius: 22px;
+  border-radius: 24px;
+
+  padding: 40px 50px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
 
   text-align: center;
 
   box-shadow:
-  0 8px 30px
-  rgba(0,0,0,0.35);
+    0 8px 30px
+    rgba(0,0,0,0.25);
 
 }
 
 
 #label {
 
-  display: block;
-
-  margin-bottom: 12px;
-
   font-size: 20px;
 
   font-weight: 600;
 
-  opacity: 0.7;
+  opacity: 0.65;
+
+  margin-bottom: 18px;
 
 }
 
@@ -200,24 +102,130 @@ body {
 
   font-weight: 700;
 
-  line-height: 1.45;
+  line-height: 1.5;
 
   word-break: keep-all;
 
   overflow-wrap: break-word;
 
+  white-space: pre-wrap;
+
 }
 
 
-/* 상태 */
+/* 조작 영역 */
 
-#message {
+#controls {
+
+  margin-top: 25px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 12px;
+
+}
+
+
+button {
+
+  border: 0;
+
+  border-radius: 10px;
+
+  padding: 14px 24px;
+
+  cursor: pointer;
+
+  font-size: 17px;
+
+  font-weight: bold;
+
+  background: #222;
 
   color: white;
 
-  margin-right: 10px;
+}
+
+
+button:hover {
+
+  background: #444;
+
+}
+
+
+button:disabled {
+
+  opacity: 0.3;
+
+  cursor: not-allowed;
+
+}
+
+
+#hideBtn {
+
+  background: #666;
+
+}
+
+
+#counter {
+
+  min-width: 100px;
+
+  text-align: center;
+
+  font-size: 20px;
+
+  font-weight: bold;
+
+}
+
+
+/* 도움말 */
+
+#help {
+
+  margin-top: 18px;
 
   font-size: 14px;
+
+  color: #777;
+
+}
+
+
+/* 질문 없음 */
+
+#empty {
+
+  display: none;
+
+  font-size: 25px;
+
+  font-weight: bold;
+
+  padding: 50px;
+
+}
+
+
+/* 오류 */
+
+#errorMessage {
+
+  display: none;
+
+  margin-top: 20px;
+
+  color: #c0392b;
+
+  font-weight: bold;
 
 }
 
@@ -229,51 +237,62 @@ body {
 <body>
 
 
-<div id="loginScreen">
-
-  <span id="loginStatus">
-    방송자 로그인이 필요합니다.
-  </span>
-
-  <button id="loginBtn">
-    Google 로그인
-  </button>
-
-</div>
+<div class="container">
 
 
-<div id="controls">
+  <div id="questionBox">
 
-  <button id="prevBtn">
-    ◀ 이전
-  </button>
+    <div id="label">
+      익명 질문
+    </div>
 
-  <span id="counter">
-    0 / 0
-  </span>
+    <div id="questionText">
+      질문을 불러오는 중...
+    </div>
 
-  <button id="nextBtn">
-    다음 ▶
-  </button>
-
-  <button id="hideBtn">
-    숨기기
-  </button>
-
-  <button id="logoutBtn">
-    로그아웃
-  </button>
-
-</div>
+  </div>
 
 
-<div id="questionBox">
+  <div id="empty">
+    아직 질문이 없습니다.
+  </div>
 
-  <span id="label">
-    익명 질문
-  </span>
 
-  <div id="questionText"></div>
+  <div id="controls">
+
+    <button id="prevBtn">
+      ◀ 이전
+    </button>
+
+
+    <div id="counter">
+      0 / 0
+    </div>
+
+
+    <button id="nextBtn">
+      다음 ▶
+    </button>
+
+
+    <button id="hideBtn">
+      숨기기
+    </button>
+
+  </div>
+
+
+  <div id="help">
+
+    ← 이전 질문 /
+    → 다음 질문 /
+    Space 숨기기·보이기
+
+  </div>
+
+
+  <div id="errorMessage"></div>
+
 
 </div>
 
@@ -293,20 +312,6 @@ from
 
 import {
 
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
-
-}
-
-from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
-
-import {
-
   getFirestore,
   collection,
   query,
@@ -319,206 +324,118 @@ from
 "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
+
+/* =========================
+   Firebase 설정
+========================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
-  authDomain: "anonymous-question-47aaf.firebaseapp.com",
-  projectId: "anonymous-question-47aaf",
-  storageBucket: "anonymous-question-47aaf.firebasestorage.app",
-  messagingSenderId: "156669665259",
-  appId: "1:156669665259:web:188f4f90005abacb22c3ae"
+
+  apiKey:
+    "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
+
+  authDomain:
+    "anonymous-question-47aaf.firebaseapp.com",
+
+  projectId:
+    "anonymous-question-47aaf",
+
+  storageBucket:
+    "anonymous-question-47aaf.firebasestorage.app",
+
+  messagingSenderId:
+    "156669665259",
+
+  appId:
+    "1:156669665259:web:188f4f90005abacb22c3ae"
+
 };
 
 
-const ADMIN_EMAIL =
-"ragoondog@gmail.com";
 
+/* =========================
+   Firebase 시작
+========================= */
 
 const app =
-initializeApp(firebaseConfig);
-
-
-const auth =
-getAuth(app);
-
+  initializeApp(firebaseConfig);
 
 const db =
-getFirestore(app);
+  getFirestore(app);
 
 
-const loginScreen =
-document.getElementById("loginScreen");
 
-
-const loginStatus =
-document.getElementById("loginStatus");
-
-
-const loginBtn =
-document.getElementById("loginBtn");
-
-
-const logoutBtn =
-document.getElementById("logoutBtn");
-
-
-const controls =
-document.getElementById("controls");
-
+/* =========================
+   HTML 요소
+========================= */
 
 const questionBox =
-document.getElementById("questionBox");
-
+  document.getElementById(
+    "questionBox"
+  );
 
 const questionText =
-document.getElementById("questionText");
+  document.getElementById(
+    "questionText"
+  );
 
+const controls =
+  document.getElementById(
+    "controls"
+  );
 
 const counter =
-document.getElementById("counter");
-
+  document.getElementById(
+    "counter"
+  );
 
 const prevBtn =
-document.getElementById("prevBtn");
-
+  document.getElementById(
+    "prevBtn"
+  );
 
 const nextBtn =
-document.getElementById("nextBtn");
-
+  document.getElementById(
+    "nextBtn"
+  );
 
 const hideBtn =
-document.getElementById("hideBtn");
+  document.getElementById(
+    "hideBtn"
+  );
 
+const empty =
+  document.getElementById(
+    "empty"
+  );
+
+const errorMessage =
+  document.getElementById(
+    "errorMessage"
+  );
+
+
+
+/* =========================
+   상태
+========================= */
 
 let questions = [];
 
 let currentIndex = 0;
 
+let currentQuestionId = null;
+
 let hidden = false;
 
-let unsubscribe = null;
 
 
-/* 로그인 */
+/* =========================
+   질문 실시간 불러오기
+========================= */
 
-loginBtn.onclick = async () => {
-
-  try {
-
-    const provider =
-    new GoogleAuthProvider();
-
-
-    provider.setCustomParameters({
-
-      prompt:
-      "select_account"
-
-    });
-
-
-    await signInWithPopup(
-      auth,
-      provider
-    );
-
-
-  } catch(error) {
-
-    console.error(error);
-
-    alert(
-      "로그인 오류: " +
-      error.message
-    );
-
-  }
-
-};
-
-
-/* 로그아웃 */
-
-logoutBtn.onclick =
-async () => {
-
-  await signOut(auth);
-
-};
-
-
-/* 로그인 상태 */
-
-onAuthStateChanged(
-auth,
-(user) => {
-
-  if (!user) {
-
-    loginScreen.style.display =
-    "block";
-
-    controls.style.display =
-    "none";
-
-    questionBox.style.display =
-    "none";
-
-    questions = [];
-
-    currentIndex = 0;
-
-    if (unsubscribe) {
-
-      unsubscribe();
-
-      unsubscribe = null;
-
-    }
-
-    return;
-
-  }
-
-
-  if (user.email !== ADMIN_EMAIL) {
-
-    alert(
-      "방송 관리자 계정이 아닙니다."
-    );
-
-    signOut(auth);
-
-    return;
-
-  }
-
-
-  loginScreen.style.display =
-  "none";
-
-
-  controls.style.display =
-  "block";
-
-
-  loadQuestions();
-
-});
-
-
-/* 질문 불러오기 */
-
-function loadQuestions() {
-
-
-  if (unsubscribe) {
-
-    unsubscribe();
-
-  }
-
-
-  const q = query(
+const questionsQuery =
+  query(
 
     collection(
       db,
@@ -533,84 +450,118 @@ function loadQuestions() {
   );
 
 
-  unsubscribe =
-  onSnapshot(
+onSnapshot(
 
-    q,
+  questionsQuery,
 
-    (snapshot) => {
-
-
-      questions = [];
+  (snapshot) => {
 
 
-      snapshot.forEach(
-      (questionDoc) => {
+    /*
+      새 질문이 들어왔을 때
+      현재 보고 있던 질문 유지
+    */
 
-        const data =
-        questionDoc.data();
+    const oldQuestionId =
+      currentQuestionId;
 
 
-        if (
-          data.text &&
-          data.text.trim()
-        ) {
+    questions =
+      snapshot.docs
+        .map((document) => {
 
-          questions.push({
+          const data =
+            document.data();
+
+          return {
 
             id:
-            questionDoc.id,
+              document.id,
 
             text:
-            data.text
+              data.text || ""
 
-          });
+          };
 
-        }
+        })
 
-      });
+        .filter((question) =>
+
+          question.text.trim() !== ""
+
+        );
 
 
-      if (
-        currentIndex >=
-        questions.length
-      ) {
+    /*
+      현재 질문 위치 유지
+    */
+
+    if (oldQuestionId) {
+
+      const foundIndex =
+        questions.findIndex(
+
+          question =>
+            question.id ===
+            oldQuestionId
+
+        );
+
+
+      if (foundIndex !== -1) {
 
         currentIndex =
+          foundIndex;
+
+      }
+
+    }
+
+
+    /*
+      삭제 등으로 번호가
+      범위를 벗어난 경우
+    */
+
+    if (
+      currentIndex >=
+      questions.length
+    ) {
+
+      currentIndex =
         Math.max(
           0,
           questions.length - 1
         );
 
-      }
-
-
-      renderQuestion();
-
-    },
-
-
-    (error) => {
-
-      console.error(
-        "질문 불러오기 오류:",
-        error
-      );
-
-
-      alert(
-        "질문 불러오기 오류: " +
-        error.message
-      );
-
     }
 
-  );
 
-}
+    renderQuestion();
+
+  },
 
 
-/* 화면 표시 */
+  (error) => {
+
+    console.error(error);
+
+    errorMessage.style.display =
+      "block";
+
+    errorMessage.textContent =
+      "질문 불러오기 오류: " +
+      error.message;
+
+  }
+
+);
+
+
+
+/* =========================
+   화면 표시
+========================= */
 
 function renderQuestion() {
 
@@ -619,149 +570,230 @@ function renderQuestion() {
     questions.length === 0
   ) {
 
-    counter.textContent =
-    "0 / 0";
-
     questionBox.style.display =
-    "none";
+      "none";
+
+    empty.style.display =
+      "block";
+
+    counter.textContent =
+      "0 / 0";
+
+    prevBtn.disabled =
+      true;
+
+    nextBtn.disabled =
+      true;
+
+    hideBtn.disabled =
+      true;
 
     return;
 
   }
 
 
-  counter.textContent =
-  (currentIndex + 1) +
-  " / " +
-  questions.length;
+  empty.style.display =
+    "none";
+
+
+  hideBtn.disabled =
+    false;
+
+
+  const question =
+    questions[currentIndex];
+
+
+  currentQuestionId =
+    question.id;
 
 
   questionText.textContent =
-  questions[currentIndex].text;
+    question.text;
+
+
+  counter.textContent =
+    (currentIndex + 1) +
+    " / " +
+    questions.length;
+
+
+  prevBtn.disabled =
+    currentIndex === 0;
+
+
+  nextBtn.disabled =
+    currentIndex ===
+    questions.length - 1;
 
 
   if (hidden) {
 
     questionBox.style.display =
-    "none";
+      "none";
 
     hideBtn.textContent =
-    "보이기";
-
-  } else {
-
-    questionBox.style.display =
-    "block";
-
-    hideBtn.textContent =
-    "숨기기";
+      "보이기";
 
   }
 
+  else {
 
-  prevBtn.disabled =
-  currentIndex === 0;
+    questionBox.style.display =
+      "flex";
 
+    hideBtn.textContent =
+      "숨기기";
 
-  nextBtn.disabled =
-  currentIndex ===
-  questions.length - 1;
+  }
 
 }
 
 
-/* 이전 */
 
-prevBtn.onclick = () => {
+/* =========================
+   이전 질문
+========================= */
+
+function previousQuestion() {
+
 
   if (
-    currentIndex > 0
+    currentIndex <= 0
   ) {
-
-    currentIndex--;
-
-    hidden = false;
-
-    renderQuestion();
-
+    return;
   }
 
-};
 
+  currentIndex--;
 
-/* 다음 */
-
-nextBtn.onclick = () => {
-
-  if (
-    currentIndex <
-    questions.length - 1
-  ) {
-
-    currentIndex++;
-
-    hidden = false;
-
-    renderQuestion();
-
-  }
-
-};
-
-
-/* 숨기기 */
-
-hideBtn.onclick = () => {
-
-  hidden = !hidden;
+  hidden = false;
 
   renderQuestion();
 
-};
+}
 
 
-/* 키보드 조작 */
+
+/* =========================
+   다음 질문
+========================= */
+
+function nextQuestion() {
+
+
+  if (
+    currentIndex >=
+    questions.length - 1
+  ) {
+    return;
+  }
+
+
+  currentIndex++;
+
+  hidden = false;
+
+  renderQuestion();
+
+}
+
+
+
+/* =========================
+   숨기기 / 보이기
+========================= */
+
+function toggleQuestion() {
+
+  if (
+    questions.length === 0
+  ) {
+    return;
+  }
+
+
+  hidden =
+    !hidden;
+
+
+  renderQuestion();
+
+}
+
+
+
+/* =========================
+   버튼 연결
+========================= */
+
+prevBtn.onclick =
+  previousQuestion;
+
+
+nextBtn.onclick =
+  nextQuestion;
+
+
+hideBtn.onclick =
+  toggleQuestion;
+
+
+
+/* =========================
+   키보드
+========================= */
 
 document.addEventListener(
-"keydown",
-(event) => {
+
+  "keydown",
+
+  (event) => {
 
 
-  if (
-    event.key ===
-    "ArrowRight"
-  ) {
+    if (
+      event.key ===
+      "ArrowLeft"
+    ) {
 
-    nextBtn.click();
+      event.preventDefault();
+
+      previousQuestion();
+
+    }
+
+
+    if (
+      event.key ===
+      "ArrowRight"
+    ) {
+
+      event.preventDefault();
+
+      nextQuestion();
+
+    }
+
+
+    if (
+      event.code ===
+      "Space"
+    ) {
+
+      event.preventDefault();
+
+      toggleQuestion();
+
+    }
 
   }
 
-
-  if (
-    event.key ===
-    "ArrowLeft"
-  ) {
-
-    prevBtn.click();
-
-  }
-
-
-  if (
-    event.key === " " ||
-    event.code === "Space"
-  ) {
-
-    event.preventDefault();
-
-    hideBtn.click();
-
-  }
-
-});
+);
 
 
 </script>
+
 
 </body>
 
