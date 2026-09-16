@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>익명 질문 관리자</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #loginArea {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #loginBtn {
+      background: #4285f4;
+      color: white;
+      font-size: 16px;
+    }
+
+    #logoutBtn {
+      background: #555;
+      color: white;
+      margin-left: 10px;
+    }
+
+    .question {
+      background: white;
+      padding: 20px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .question-text {
+      font-size: 20px;
+      margin-bottom: 15px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .showBtn {
+      background: #111;
+      color: white;
+      margin-right: 7px;
+    }
+
+    .deleteBtn {
+      background: #e53935;
+      color: white;
+    }
+
+    #status {
+      margin: 15px 0;
+      font-weight: bold;
+    }
+
+    #questions {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>질문 관리자</h1>
+
+  <div id="loginArea">
+
+    <button id="loginBtn">
+      Google 로그인
+    </button>
+
+    <button id="logoutBtn" style="display:none;">
+      로그아웃
+    </button>
+
+    <div id="status">
+      관리자 로그인이 필요합니다.
+    </div>
+
+  </div>
+
+  <div id="questions"></div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc
+} from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyCBwRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
+
+  authDomain: "anonymous-question-47aaf.firebaseapp.com",
+
+  projectId: "anonymous-question-47aaf",
+
+  storageBucket: "anonymous-question-47aaf.firebasestorage.app",
+
+  messagingSenderId: "156669665259",
+
+  appId: "1:156669665259:web:188f4f90005abacb22c3ae"
+
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+const provider = new GoogleAuthProvider();
+
+
+const loginBtn = document.getElementById("loginBtn");
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+const status = document.getElementById("status");
+
+const questionsDiv = document.getElementById("questions");
+
+
+loginBtn.onclick = async () => {
+
+  try {
+
+    await signInWithPopup(auth, provider);
+
+  } catch (error) {
+
+    alert("로그인 오류: " + error.message);
+
+  }
+
+};
+
+
+logoutBtn.onclick = async () => {
+
+  await signOut(auth);
+
+};
+
+
+onAuthStateChanged(auth, (user) => {
+
+  if (!user) {
+
+    status.textContent = "관리자 로그인이 필요합니다.";
+
+    loginBtn.style.display = "inline-block";
+
+    logoutBtn.style.display = "none";
+
+    questionsDiv.innerHTML = "";
+
+    return;
+
+  }
+
+
+  if (user.email !== "ragoondog@gmail.com") {
+
+    status.textContent = "관리자 계정이 아닙니다.";
+
+    questionsDiv.innerHTML = "";
+
+    signOut(auth);
+
+    return;
+
+  }
+
+
+  status.textContent =
+    "관리자 로그인 완료 : " + user.email;
+
+  loginBtn.style.display = "none";
+
+  logoutBtn.style.display = "inline-block";
+
+  loadQuestions();
+
+});
+
+
+function loadQuestions() {
+
+  const q = query(
+    collection(db, "questions"),
+    orderBy("createdAt", "desc")
+  );
+
+
+  onSnapshot(q, (snapshot) => {
+
+    questionsDiv.innerHTML = "";
+
+
+    if (snapshot.empty) {
+
+      questionsDiv.innerHTML =
+        "<p>아직 질문이 없습니다.</p>";
+
+      return;
+
+    }
+
+
+    snapshot.forEach((questionDoc) => {
+
+      const data = questionDoc.data();
+
+
+      const box = document.createElement("div");
+
+      box.className = "question";
+
+
+      const text = document.createElement("div");
+
+      text.className = "question-text";
+
+      text.textContent = data.text;
+
+
+      const showBtn = document.createElement("button");
+
+      showBtn.className = "showBtn";
+
+      showBtn.textContent = "📺 방송에 띄우기";
+
+
+      showBtn.onclick = async () => {
+
+        try {
+
+          await setDoc(
+            doc(db, "display", "current"),
+            {
+              text: data.text,
+              questionId: questionDoc.id,
+              updatedAt: new Date()
+            }
+          );
+
+          alert("방송 화면에 질문을 띄웠습니다.");
+
+        } catch (error) {
+
+          alert("오류: " + error.message);
+
+        }
+
+      };
+
+
+      const deleteBtn = document.createElement("button");
+
+      deleteBtn.className = "deleteBtn";
+
+      deleteBtn.textContent = "삭제";
+
+
+      deleteBtn.onclick = async () => {
+
+        if (!confirm("이 질문을 삭제할까요?")) {
+          return;
+        }
+
+        try {
+
+          await deleteDoc(
+            doc(db, "questions", questionDoc.id)
+          );
+
+        } catch (error) {
+
+          alert("삭제 오류: " + error.message);
+
+        }
+
+      };
+
+
+      box.appendChild(text);
+
+      box.appendChild(showBtn);
+
+      box.appendChild(deleteBtn);
+
+      questionsDiv.appendChild(box);
+
+    });
+
+  }, (error) => {
+
+    status.textContent =
+      "질문을 불러오지 못했습니다: " + error.message;
+
+  });
+
+}
+
+</script>
+
+</body>
+</html>
