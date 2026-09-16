@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>익명 질문 관리자</title>
+  <title>질문 관리자</title>
 
   <style>
     body {
@@ -18,11 +18,7 @@
       margin: auto;
     }
 
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    #loginArea {
+    .box {
       background: white;
       padding: 25px;
       border-radius: 15px;
@@ -46,42 +42,41 @@
     #logoutBtn {
       background: #555;
       color: white;
-      margin-left: 10px;
+      margin-left: 8px;
     }
 
     .question {
       background: white;
       padding: 20px;
-      margin-bottom: 12px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      margin-bottom: 12px;
     }
 
-    .question-text {
-      font-size: 20px;
+    .questionText {
+      font-size: 18px;
       margin-bottom: 15px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .showBtn {
-      background: #111;
+      background: #222;
       color: white;
-      margin-right: 7px;
+      margin-right: 6px;
     }
 
     .deleteBtn {
-      background: #e53935;
+      background: #e74c3c;
       color: white;
     }
 
-    #status {
-      margin: 15px 0;
-      font-weight: bold;
+    #adminArea {
+      display: none;
     }
 
-    #questions {
-      margin-top: 20px;
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -92,43 +87,32 @@
 
   <h1>질문 관리자</h1>
 
-  <div id="loginArea">
+  <div class="box" id="loginArea">
+    <button id="loginBtn">Google 로그인</button>
+    <div id="status">관리자 로그인이 필요합니다.</div>
+  </div>
 
-    <button id="loginBtn">
-      Google 로그인
-    </button>
+  <div id="adminArea">
 
-    <button id="logoutBtn" style="display:none;">
-      로그아웃
-    </button>
+    <div class="box">
+      <strong id="userInfo"></strong>
+      <button id="logoutBtn">로그아웃</button>
+    </div>
 
-    <div id="status">
-      관리자 로그인이 필요합니다.
+    <h2>받은 질문</h2>
+
+    <div id="questionList">
+      질문을 불러오는 중...
     </div>
 
   </div>
 
-  <div id="questions"></div>
-
 </div>
-
 
 <script type="module">
 
 import { initializeApp } from
 "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
-import {
-  getFirestore,
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  doc,
-  setDoc,
-  deleteDoc
-} from
-"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 import {
   getAuth,
@@ -139,49 +123,56 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+import {
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
 
 const firebaseConfig = {
-
-  apiKey: "AIzaSyCBwRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
-
+  apiKey: "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
   authDomain: "anonymous-question-47aaf.firebaseapp.com",
-
   projectId: "anonymous-question-47aaf",
-
   storageBucket: "anonymous-question-47aaf.firebasestorage.app",
-
   messagingSenderId: "156669665259",
-
   appId: "1:156669665259:web:188f4f90005abacb22c3ae"
-
 };
 
 
-const app = initializeApp(firebaseConfig);
+const ADMIN_EMAIL = "ragoondog@gmail.com";
 
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-const auth = getAuth(app);
-
-const provider = new GoogleAuthProvider();
-
-
 const loginBtn = document.getElementById("loginBtn");
-
 const logoutBtn = document.getElementById("logoutBtn");
-
+const loginArea = document.getElementById("loginArea");
+const adminArea = document.getElementById("adminArea");
 const status = document.getElementById("status");
-
-const questionsDiv = document.getElementById("questions");
+const userInfo = document.getElementById("userInfo");
+const questionList = document.getElementById("questionList");
 
 
 loginBtn.onclick = async () => {
 
   try {
 
+    const provider = new GoogleAuthProvider();
+
     await signInWithPopup(auth, provider);
 
   } catch (error) {
+
+    console.error(error);
 
     alert("로그인 오류: " + error.message);
 
@@ -201,24 +192,19 @@ onAuthStateChanged(auth, (user) => {
 
   if (!user) {
 
+    loginArea.style.display = "block";
+    adminArea.style.display = "none";
+
     status.textContent = "관리자 로그인이 필요합니다.";
-
-    loginBtn.style.display = "inline-block";
-
-    logoutBtn.style.display = "none";
-
-    questionsDiv.innerHTML = "";
 
     return;
 
   }
 
 
-  if (user.email !== "ragoondog@gmail.com") {
+  if (user.email !== ADMIN_EMAIL) {
 
-    status.textContent = "관리자 계정이 아닙니다.";
-
-    questionsDiv.innerHTML = "";
+    alert("관리자 계정이 아닙니다.");
 
     signOut(auth);
 
@@ -227,12 +213,11 @@ onAuthStateChanged(auth, (user) => {
   }
 
 
-  status.textContent =
-    "관리자 로그인 완료 : " + user.email;
+  loginArea.style.display = "none";
+  adminArea.style.display = "block";
 
-  loginBtn.style.display = "none";
-
-  logoutBtn.style.display = "inline-block";
+  userInfo.textContent =
+    "관리자 로그인: " + user.email;
 
   loadQuestions();
 
@@ -249,13 +234,13 @@ function loadQuestions() {
 
   onSnapshot(q, (snapshot) => {
 
-    questionsDiv.innerHTML = "";
+    questionList.innerHTML = "";
 
 
     if (snapshot.empty) {
 
-      questionsDiv.innerHTML =
-        "<p>아직 질문이 없습니다.</p>";
+      questionList.innerHTML =
+        "<div class='box'>아직 질문이 없습니다.</div>";
 
       return;
 
@@ -266,24 +251,23 @@ function loadQuestions() {
 
       const data = questionDoc.data();
 
+      const div = document.createElement("div");
 
-      const box = document.createElement("div");
-
-      box.className = "question";
+      div.className = "question";
 
 
       const text = document.createElement("div");
 
-      text.className = "question-text";
+      text.className = "questionText";
 
-      text.textContent = data.text;
+      text.textContent = data.text || "";
 
 
       const showBtn = document.createElement("button");
 
       showBtn.className = "showBtn";
 
-      showBtn.textContent = "📺 방송에 띄우기";
+      showBtn.textContent = "방송에 띄우기";
 
 
       showBtn.onclick = async () => {
@@ -295,7 +279,7 @@ function loadQuestions() {
             {
               text: data.text,
               questionId: questionDoc.id,
-              updatedAt: new Date()
+              updatedAt: serverTimestamp()
             }
           );
 
@@ -303,7 +287,9 @@ function loadQuestions() {
 
         } catch (error) {
 
-          alert("오류: " + error.message);
+          console.error(error);
+
+          alert("방송 표시 오류: " + error.message);
 
         }
 
@@ -331,6 +317,8 @@ function loadQuestions() {
 
         } catch (error) {
 
+          console.error(error);
+
           alert("삭제 오류: " + error.message);
 
         }
@@ -338,20 +326,22 @@ function loadQuestions() {
       };
 
 
-      box.appendChild(text);
+      div.appendChild(text);
+      div.appendChild(showBtn);
+      div.appendChild(deleteBtn);
 
-      box.appendChild(showBtn);
-
-      box.appendChild(deleteBtn);
-
-      questionsDiv.appendChild(box);
+      questionList.appendChild(div);
 
     });
 
   }, (error) => {
 
-    status.textContent =
-      "질문을 불러오지 못했습니다: " + error.message;
+    console.error(error);
+
+    questionList.innerHTML =
+      "<div class='box'>질문 불러오기 오류: " +
+      error.message +
+      "</div>";
 
   });
 
