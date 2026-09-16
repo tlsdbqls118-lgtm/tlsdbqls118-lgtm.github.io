@@ -28,21 +28,40 @@
     button {
       border: 0;
       border-radius: 8px;
-      padding: 12px 18px;
+      padding: 10px 15px;
       cursor: pointer;
-      font-size: 15px;
-      font-weight: bold;
+      font-size: 14px;
     }
 
     #loginBtn {
       background: #4285f4;
       color: white;
+      font-size: 16px;
     }
 
     #logoutBtn {
       background: #555;
       color: white;
-      margin-left: 10px;
+      margin-left: 8px;
+    }
+
+    .question {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .questionText {
+      font-size: 18px;
+      margin-bottom: 15px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .deleteBtn {
+      background: #e74c3c;
+      color: white;
     }
 
     #adminArea {
@@ -54,74 +73,10 @@
       font-weight: bold;
     }
 
-    .counter {
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
+    #count {
       margin-bottom: 20px;
-    }
-
-    .questionBox {
-      background: white;
-      border-radius: 18px;
-      padding: 40px;
-      min-height: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #questionText {
-      font-size: 28px;
+      font-size: 18px;
       font-weight: bold;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    #prevBtn,
-    #nextBtn {
-      background: #222;
-      color: white;
-      min-width: 150px;
-    }
-
-    #deleteBtn {
-      background: #e74c3c;
-      color: white;
-    }
-
-    #hideBtn {
-      background: #777;
-      color: white;
-    }
-
-    button:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
-    .help {
-      text-align: center;
-      margin-top: 20px;
-      color: #777;
-      font-size: 14px;
-    }
-
-    .liveStatus {
-      text-align: center;
-      margin-bottom: 15px;
-      font-weight: bold;
-      color: #1b7f35;
     }
   </style>
 </head>
@@ -146,46 +101,15 @@
 
     <h2>받은 질문</h2>
 
-    <div class="counter" id="counter">
-      0 / 0
-    </div>
+    <div id="count"></div>
 
-    <div class="liveStatus" id="liveStatus"></div>
-
-    <div class="questionBox">
-      <div id="questionText">
-        질문을 불러오는 중...
-      </div>
-    </div>
-
-    <div class="controls">
-
-      <button id="prevBtn">
-        ◀ 이전 질문
-      </button>
-
-      <button id="nextBtn">
-        다음 질문 ▶
-      </button>
-
-      <button id="hideBtn">
-        방송에서 숨기기
-      </button>
-
-      <button id="deleteBtn">
-        현재 질문 삭제
-      </button>
-
-    </div>
-
-    <div class="help">
-      키보드 ← 이전 질문 / → 다음 질문 / ESC 방송에서 숨기기
+    <div id="questionList">
+      질문을 불러오는 중...
     </div>
 
   </div>
 
 </div>
-
 
 <script type="module">
 
@@ -208,15 +132,13 @@ import {
   orderBy,
   onSnapshot,
   doc,
-  setDoc,
-  deleteDoc,
-  serverTimestamp
+  deleteDoc
 }
 from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDq1lPYv5OWP0rdsJCbMh3Xt_laZKEptVQ",
+  apiKey: "여기에_현재_정상작동하는_API_KEY",
   authDomain: "anonymous-question-47aaf.firebaseapp.com",
   projectId: "anonymous-question-47aaf",
   storageBucket: "anonymous-question-47aaf.firebasestorage.app",
@@ -224,88 +146,38 @@ const firebaseConfig = {
   appId: "1:156669665259:web:188f4f90005abacb22c3ae"
 };
 
-
 const ADMIN_EMAIL = "ragoondog@gmail.com";
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginArea = document.getElementById("loginArea");
+const adminArea = document.getElementById("adminArea");
+const status = document.getElementById("status");
+const userInfo = document.getElementById("userInfo");
+const questionList = document.getElementById("questionList");
+const count = document.getElementById("count");
 
-const loginBtn =
-  document.getElementById("loginBtn");
-
-const logoutBtn =
-  document.getElementById("logoutBtn");
-
-const loginArea =
-  document.getElementById("loginArea");
-
-const adminArea =
-  document.getElementById("adminArea");
-
-const status =
-  document.getElementById("status");
-
-const userInfo =
-  document.getElementById("userInfo");
-
-const counter =
-  document.getElementById("counter");
-
-const questionText =
-  document.getElementById("questionText");
-
-const prevBtn =
-  document.getElementById("prevBtn");
-
-const nextBtn =
-  document.getElementById("nextBtn");
-
-const deleteBtn =
-  document.getElementById("deleteBtn");
-
-const hideBtn =
-  document.getElementById("hideBtn");
-
-const liveStatus =
-  document.getElementById("liveStatus");
-
-
-let questions = [];
-
-let currentIndex = 0;
-
-let unsubscribeQuestions = null;
-
-let currentQuestionId = null;
-
-
-/* =========================
-   로그인
-========================= */
 
 loginBtn.onclick = async () => {
 
   try {
 
-    const provider =
-      new GoogleAuthProvider();
+    const provider = new GoogleAuthProvider();
 
-    await signInWithPopup(
-      auth,
-      provider
-    );
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
+
+    await signInWithPopup(auth, provider);
 
   } catch (error) {
 
     console.error(error);
-
-    alert(
-      "로그인 오류: " +
-      error.message
-    );
+    alert("로그인 오류: " + error.message);
 
   }
 
@@ -313,534 +185,125 @@ loginBtn.onclick = async () => {
 
 
 logoutBtn.onclick = async () => {
-
   await signOut(auth);
-
 };
 
 
-onAuthStateChanged(
-  auth,
-  (user) => {
+onAuthStateChanged(auth, (user) => {
 
-    if (!user) {
+  if (!user) {
 
-      loginArea.style.display =
-        "block";
+    loginArea.style.display = "block";
+    adminArea.style.display = "none";
+    status.textContent = "관리자 로그인이 필요합니다.";
 
-      adminArea.style.display =
-        "none";
-
-      status.textContent =
-        "관리자 로그인이 필요합니다.";
-
-      if (unsubscribeQuestions) {
-
-        unsubscribeQuestions();
-
-        unsubscribeQuestions = null;
-
-      }
-
-      return;
-
-    }
-
-
-    if (user.email !== ADMIN_EMAIL) {
-
-      alert(
-        "관리자 계정이 아닙니다."
-      );
-
-      signOut(auth);
-
-      return;
-
-    }
-
-
-    loginArea.style.display =
-      "none";
-
-    adminArea.style.display =
-      "block";
-
-    userInfo.textContent =
-      "관리자 로그인: " +
-      user.email;
-
-
-    loadQuestions();
-
+    return;
   }
-);
 
+  if (user.email !== ADMIN_EMAIL) {
 
-/* =========================
-   질문 불러오기
-========================= */
+    alert("관리자 계정이 아닙니다.");
+    signOut(auth);
+
+    return;
+  }
+
+  loginArea.style.display = "none";
+  adminArea.style.display = "block";
+
+  userInfo.textContent =
+    "관리자 로그인: " + user.email;
+
+  loadQuestions();
+
+});
+
 
 function loadQuestions() {
 
-  if (unsubscribeQuestions) {
-
-    unsubscribeQuestions();
-
-  }
-
-
   const q = query(
-
-    collection(
-      db,
-      "questions"
-    ),
-
-    orderBy(
-      "createdAt",
-      "asc"
-    )
-
+    collection(db, "questions"),
+    orderBy("createdAt", "asc")
   );
 
+  onSnapshot(q, (snapshot) => {
 
-  unsubscribeQuestions =
-    onSnapshot(
+    questionList.innerHTML = "";
 
-      q,
+    count.textContent =
+      "총 질문: " + snapshot.size + "개";
 
-      (snapshot) => {
+    if (snapshot.empty) {
 
-        const oldQuestionId =
-          currentQuestionId;
+      questionList.innerHTML =
+        "<div class='box'>아직 질문이 없습니다.</div>";
 
-        questions =
-          snapshot.docs.map(
-            (d) => ({
-              id: d.id,
-              ...d.data()
-            })
-          );
-
-
-        if (
-          oldQuestionId &&
-          questions.length > 0
-        ) {
-
-          const foundIndex =
-            questions.findIndex(
-              q =>
-                q.id ===
-                oldQuestionId
-            );
-
-
-          if (foundIndex !== -1) {
-
-            currentIndex =
-              foundIndex;
-
-          }
-
-        }
-
-
-        if (
-          currentIndex >=
-          questions.length
-        ) {
-
-          currentIndex =
-            Math.max(
-              0,
-              questions.length - 1
-            );
-
-        }
-
-
-        renderQuestion();
-
-      },
-
-      (error) => {
-
-        console.error(error);
-
-        questionText.textContent =
-          "질문 불러오기 오류: " +
-          error.message;
-
-      }
-
-    );
-
-}
-
-
-/* =========================
-   현재 질문 화면 표시
-========================= */
-
-function renderQuestion() {
-
-  if (
-    questions.length === 0
-  ) {
-
-    currentQuestionId = null;
-
-    counter.textContent =
-      "0 / 0";
-
-    questionText.textContent =
-      "아직 질문이 없습니다.";
-
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    deleteBtn.disabled = true;
-    hideBtn.disabled = true;
-
-    return;
-
-  }
-
-
-  const question =
-    questions[currentIndex];
-
-
-  currentQuestionId =
-    question.id;
-
-
-  counter.textContent =
-    (currentIndex + 1) +
-    " / " +
-    questions.length;
-
-
-  questionText.textContent =
-    question.text ||
-    "(내용 없음)";
-
-
-  prevBtn.disabled =
-    currentIndex === 0;
-
-
-  nextBtn.disabled =
-    currentIndex ===
-    questions.length - 1;
-
-
-  deleteBtn.disabled = false;
-
-  hideBtn.disabled = false;
-
-}
-
-
-/* =========================
-   방송 화면에 표시
-========================= */
-
-async function showCurrentQuestion() {
-
-  if (
-    questions.length === 0
-  ) {
-    return;
-  }
-
-
-  const question =
-    questions[currentIndex];
-
-
-  try {
-
-    await setDoc(
-
-      doc(
-        db,
-        "display",
-        "current"
-      ),
-
-      {
-
-        text:
-          question.text || "",
-
-        questionId:
-          question.id,
-
-        visible:
-          true,
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    liveStatus.textContent =
-      "● 방송 표시 중 — " +
-      (currentIndex + 1) +
-      "번 질문";
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "방송 표시 오류: " +
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================
-   다음 질문
-========================= */
-
-async function nextQuestion() {
-
-  if (
-    currentIndex >=
-    questions.length - 1
-  ) {
-    return;
-  }
-
-
-  currentIndex++;
-
-  renderQuestion();
-
-  await showCurrentQuestion();
-
-}
-
-
-/* =========================
-   이전 질문
-========================= */
-
-async function prevQuestion() {
-
-  if (
-    currentIndex <= 0
-  ) {
-    return;
-  }
-
-
-  currentIndex--;
-
-  renderQuestion();
-
-  await showCurrentQuestion();
-
-}
-
-
-/* =========================
-   방송에서 숨기기
-========================= */
-
-async function hideQuestion() {
-
-  try {
-
-    await setDoc(
-
-      doc(
-        db,
-        "display",
-        "current"
-      ),
-
-      {
-
-        text: "",
-
-        questionId: null,
-
-        visible: false,
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    liveStatus.textContent =
-      "방송 화면에서 질문을 숨겼습니다.";
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "숨기기 오류: " +
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================
-   현재 질문 삭제
-========================= */
-
-async function deleteCurrentQuestion() {
-
-  if (
-    questions.length === 0
-  ) {
-    return;
-  }
-
-
-  const question =
-    questions[currentIndex];
-
-
-  if (
-    !confirm(
-      "현재 질문을 삭제할까요?"
-    )
-  ) {
-    return;
-  }
-
-
-  try {
-
-    await deleteDoc(
-
-      doc(
-        db,
-        "questions",
-        question.id
-      )
-
-    );
-
-
-    currentQuestionId = null;
-
-
-    if (
-      currentIndex >=
-      questions.length - 1
-    ) {
-
-      currentIndex =
-        Math.max(
-          0,
-          currentIndex - 1
-        );
-
-    }
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "삭제 오류: " +
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================
-   버튼 연결
-========================= */
-
-nextBtn.onclick =
-  nextQuestion;
-
-prevBtn.onclick =
-  prevQuestion;
-
-hideBtn.onclick =
-  hideQuestion;
-
-deleteBtn.onclick =
-  deleteCurrentQuestion;
-
-
-/* =========================
-   키보드 조작
-========================= */
-
-document.addEventListener(
-  "keydown",
-  async (event) => {
-
-    if (
-      adminArea.style.display ===
-      "none"
-    ) {
       return;
     }
 
+    let number = 1;
 
-    if (
-      event.key ===
-      "ArrowRight"
-    ) {
+    snapshot.forEach((questionDoc) => {
 
-      event.preventDefault();
+      const data = questionDoc.data();
 
-      await nextQuestion();
+      const div = document.createElement("div");
+      div.className = "question";
 
-    }
+      const text = document.createElement("div");
+      text.className = "questionText";
 
+      text.textContent =
+        number + ". " + (data.text || "");
 
-    if (
-      event.key ===
-      "ArrowLeft"
-    ) {
+      const deleteBtn =
+        document.createElement("button");
 
-      event.preventDefault();
+      deleteBtn.className = "deleteBtn";
+      deleteBtn.textContent = "삭제";
 
-      await prevQuestion();
+      deleteBtn.onclick = async () => {
 
-    }
+        if (!confirm("이 질문을 삭제할까요?")) {
+          return;
+        }
 
+        try {
 
-    if (
-      event.key ===
-      "Escape"
-    ) {
+          await deleteDoc(
+            doc(db, "questions", questionDoc.id)
+          );
 
-      event.preventDefault();
+        } catch (error) {
 
-      await hideQuestion();
+          console.error(error);
+          alert("삭제 오류: " + error.message);
 
-    }
+        }
 
-  }
-);
+      };
+
+      div.appendChild(text);
+      div.appendChild(deleteBtn);
+
+      questionList.appendChild(div);
+
+      number++;
+
+    });
+
+  }, (error) => {
+
+    console.error(error);
+
+    questionList.innerHTML =
+      "<div class='box'>질문 불러오기 오류: " +
+      error.message +
+      "</div>";
+
+  });
+
+}
 
 </script>
 
