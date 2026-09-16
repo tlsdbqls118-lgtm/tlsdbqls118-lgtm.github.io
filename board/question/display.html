@@ -1,133 +1,311 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>방송 질문 화면</title>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      overflow: hidden;
-      font-family: Arial, "Noto Sans KR", sans-serif;
-    }
+<meta charset="UTF-8">
 
-    #questionBox {
-      display: none;
-      position: absolute;
-      left: 50%;
-      bottom: 60px;
-      transform: translateX(-50%);
-      width: 80%;
-      max-width: 1000px;
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
-      box-sizing: border-box;
-      padding: 28px 36px;
+<title>방송 질문 화면</title>
 
-      background: rgba(0, 0, 0, 0.82);
-      color: white;
 
-      border-radius: 22px;
+<style>
 
-      text-align: center;
-      font-size: 38px;
-      font-weight: 700;
-      line-height: 1.45;
+html,
+body {
 
-      word-break: keep-all;
-      overflow-wrap: break-word;
+  margin: 0;
+  padding: 0;
 
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-    }
+  width: 100%;
+  height: 100%;
 
-    #label {
-      display: block;
-      margin-bottom: 12px;
-      font-size: 20px;
-      font-weight: 600;
-      opacity: 0.7;
-    }
-  </style>
+  background: transparent;
+
+  overflow: hidden;
+
+  font-family:
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
+
+}
+
+
+#questionBox {
+
+  display: none;
+
+  position: absolute;
+
+  left: 50%;
+  bottom: 60px;
+
+  transform:
+    translateX(-50%);
+
+  width: 80%;
+  max-width: 1000px;
+
+  box-sizing: border-box;
+
+  padding: 28px 36px;
+
+  background:
+    rgba(0,0,0,0.82);
+
+  color: white;
+
+  border-radius: 22px;
+
+  text-align: center;
+
+  font-size: 38px;
+
+  font-weight: 700;
+
+  line-height: 1.45;
+
+  word-break: keep-all;
+
+  overflow-wrap: break-word;
+
+  box-shadow:
+    0 8px 30px
+    rgba(0,0,0,0.35);
+
+}
+
+
+#label {
+
+  display: block;
+
+  margin-bottom: 12px;
+
+  font-size: 20px;
+
+  font-weight: 600;
+
+  opacity: 0.7;
+
+}
+
+
+#questionText {
+
+  white-space: pre-wrap;
+
+}
+
+</style>
+
 </head>
+
 
 <body>
 
-  <div id="questionBox">
-    <span id="label">익명 질문</span>
-    <div id="questionText"></div>
-  </div>
 
-  <script type="module">
+<div id="questionBox">
 
-    import { initializeApp }
-    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  <span id="label">
+    익명 질문
+  </span>
 
-    import {
-      getFirestore,
-      doc,
-      onSnapshot
-    }
-    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  <div id="questionText"></div>
+
+</div>
 
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
-      authDomain: "anonymous-question-47aaf.firebaseapp.com",
-      projectId: "anonymous-question-47aaf",
-      storageBucket: "anonymous-question-47aaf.firebasestorage.app",
-      messagingSenderId: "156669665259",
-      appId: "1:156669665259:web:188f4f90005abacb22c3ae"
-    };
+<script type="module">
 
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
-    const questionBox = document.getElementById("questionBox");
-    const questionText = document.getElementById("questionText");
+
+import {
+
+  getFirestore,
+  doc,
+  onSnapshot
+
+}
+from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyCbWRpIzYpR_9djEoyJJjUX0-z8RjDQMFw",
+
+  authDomain:
+    "anonymous-question-47aaf.firebaseapp.com",
+
+  projectId:
+    "anonymous-question-47aaf",
+
+  storageBucket:
+    "anonymous-question-47aaf.firebasestorage.app",
+
+  messagingSenderId:
+    "156669665259",
+
+  appId:
+    "1:156669665259:web:188f4f90005abacb22c3ae"
+
+};
+
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+
+const db =
+  getFirestore(app);
+
+
+const questionBox =
+  document.getElementById(
+    "questionBox"
+  );
+
+
+const questionText =
+  document.getElementById(
+    "questionText"
+  );
+
+
+/*
+  관리자 페이지와 동일하게
+  display/current 감시
+*/
+
+const displayRef =
+  doc(
+    db,
+    "display",
+    "current"
+  );
+
+
+onSnapshot(
+
+  displayRef,
+
+  (snapshot) => {
 
 
     /*
-      admin.html에서 "방송에 띄우기"를 누르면
-      broadcast/current 문서가 변경됩니다.
+      문서 자체가 없으면
+      화면 숨김
     */
 
-    const broadcastRef = doc(db, "display", "current");
+    if (!snapshot.exists()) {
 
-    onSnapshot(broadcastRef, (snapshot) => {
+      questionBox.style.display =
+        "none";
 
-      if (!snapshot.exists()) {
-        questionBox.style.display = "none";
-        return;
-      }
+      return;
 
-      const data = snapshot.data();
+    }
 
-      const text =
-        data.text ||
-        data.question ||
-        data.content ||
+
+    const data =
+      snapshot.data();
+
+
+    /*
+      방송에서 내리기를 누르면
+      visible = false
+    */
+
+    if (
+      data.visible === false
+    ) {
+
+      questionBox.style.display =
+        "none";
+
+      questionText.textContent =
         "";
 
-      if (!text) {
-        questionBox.style.display = "none";
-        return;
-      }
+      return;
 
-      questionText.textContent = text;
-      questionBox.style.display = "block";
+    }
 
-    }, (error) => {
 
-      console.error("질문 불러오기 오류:", error);
+    const text =
 
-    });
+      data.text ||
 
-  </script>
+      data.question ||
+
+      data.content ||
+
+      "";
+
+
+    /*
+      내용이 없으면 숨김
+    */
+
+    if (!text) {
+
+      questionBox.style.display =
+        "none";
+
+      questionText.textContent =
+        "";
+
+      return;
+
+    }
+
+
+    /*
+      질문 표시
+    */
+
+    questionText.textContent =
+      text;
+
+
+    questionBox.style.display =
+      "block";
+
+  },
+
+
+  (error) => {
+
+    console.error(
+      "질문 불러오기 오류:",
+      error
+    );
+
+    questionBox.style.display =
+      "none";
+
+  }
+
+);
+
+
+</script>
+
 
 </body>
+
 </html>
